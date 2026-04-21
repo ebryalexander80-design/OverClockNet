@@ -1,0 +1,149 @@
+----------------------------------------------------------------
+Santo DOMINGO - R-CORE-SANTO-DOMINGO
+----------------------------------------------------------------
+
+enable
+configure terminal
+hostname R-CORE-SANTO-DOMINGO
+no ip domain-lookup
+ip domain-name overclocknet.com.do
+enable secret cisco123
+service password-encryption
+banner motd # ACCESO RESTRINGIDO - OVERCLOCKNET #
+
+========================
+          USUARIO Y SSH
+========================
+username admin privilege 15 secret Admin-Overclock2026
+
+crypto key generate rsa modulus 2048
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+========================
+             CONSOLA
+========================
+line console 0
+ login local
+ exec-timeout 5 0
+ logging synchronous
+exit
+
+========================
+             VTY (SSH)
+========================
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+exit
+
+========================
+       ENLACE WAN (ISP)
+========================
+interface ethernet 2/0
+ description LINK-ISP
+ ip address 1.0.0.1 255.255.255.252
+ no shutdown
+ duplex full
+exit
+
+========================
+  ENLACES A R-SW1 / R-SW2
+========================
+interface ethernet 0/0
+ description LINK-R-SW1
+ ip address 10.0.255.1 255.255.255.252
+ no shutdown
+ duplex full
+exit
+
+interface ethernet 0/1
+ description LINK-R-SW2
+ ip address 10.0.255.5 255.255.255.252
+ no shutdown
+ duplex full
+exit
+
+========================
+         RUTA DEFAULT
+========================
+ip route 0.0.0.0 0.0.0.0 1.0.0.2
+
+========================
+       OSPF MULTI-AREA
+========================
+router ospf 1
+ router-id 1.1.1.1
+ network 1.0.0.0 0.0.0.3 area 0
+ network 10.0.255.0 0.0.0.3 area 1
+ network 10.0.255.4 0.0.0.3 area 1
+exit
+
+end
+copy running-config startup-config
+
+================================================================
+                        VPN (IPSEC)
+================================================================
+
+configure terminal
+
+! ================= FASE 1 =================
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 2
+ lifetime 86400
+
+! CLAVES ISAKMP POR PEER
+crypto isakmp key VPN-123 address 1.0.0.5
+crypto isakmp key VPN-123 address 1.0.0.9
+crypto isakmp key VPN-123 address 1.0.0.13
+crypto isakmp key VPN-123 address 1.0.0.17
+
+! ================= FASE 2 =================
+crypto ipsec transform-set TS esp-aes esp-sha-hmac
+
+! ================= ACLs =================
+access-list 110 permit ip 10.0.0.0 0.0.255.255 10.0.3.192 0.0.0.63
+access-list 111 permit ip 10.0.0.0 0.0.255.255 10.0.2.128 0.0.0.63
+access-list 112 permit ip 10.0.0.0 0.0.255.255 10.0.6.0 0.0.0.63
+access-list 113 permit ip 10.0.0.0 0.0.255.255 10.0.7.0 0.0.0.63
+
+! ================= CRYPTO MAP =================
+crypto map VPN-MAP 10 ipsec-isakmp
+ set peer 1.0.0.5
+ set transform-set TS
+ match address 110
+
+crypto map VPN-MAP 20 ipsec-isakmp
+ set peer 1.0.0.9
+ set transform-set TS
+ match address 111
+
+crypto map VPN-MAP 30 ipsec-isakmp
+ set peer 1.0.0.13
+ set transform-set TS
+ match address 112
+
+crypto map VPN-MAP 40 ipsec-isakmp
+ set peer 1.0.0.17
+ set transform-set TS
+ match address 113
+
+! ================= APLICAR A WAN =================
+interface ethernet 2/0
+ crypto map VPN-MAP
+
+end
+copy running-config startup-config
+
+================================================================
+                     VERIFICACIÓN VPN
+================================================================
+show crypto isakmp sa
+show crypto ipsec sa
+! Resultado esperado: QM_IDLE

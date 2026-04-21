@@ -1,0 +1,18 @@
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 2
+ lifetime 86400
+
+crypto isakmp key VPN-123 address 1.0.0.1
+
+crypto ipsec transform-set TS esp-aes esp-sha-hmac
+
+crypto map VPN-MAP 10 ipsec-isakmp
+ set peer 1.0.0.1
+ set transform-set TS
+ match address 110
+
+interface e0/0
+ crypto map VPN-MAP

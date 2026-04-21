@@ -1,0 +1,128 @@
+-----------------------------------------------
+R-BARAHONA - SUCURSAL BARAHONA
+-----------------------------------------------
+
+enable
+configure terminal
+
+hostname R-BARAHONA
+no ip domain-lookup
+ip domain-name overclocknet.com.do
+enable secret cisco123
+service password-encryption
+
+banner motd # ACCESO RESTRINGIDO - BARAHONA #
+
+username admin privilege 15 secret Admin-Overclock2026
+
+crypto key generate rsa modulus 2048
+ip ssh version 2
+
+line console 0
+ login local
+ exec-timeout 5 0
+ logging synchronous
+exit
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+exit
+
+========================
+       AAA / RADIUS
+========================
+aaa new-model
+
+radius server RADIUS-SERVER
+ address ipv4 10.0.3.243 auth-port 1812 acct-port 1813
+ key radius123
+
+aaa group server radius RAD-GROUP
+ server name RADIUS-SERVER
+
+aaa authentication login default group RAD-GROUP local
+
+line vty 0 4
+ login authentication default
+ exit
+
+========================
+          WAN
+========================
+interface e0/0
+ description LINK-ISP
+ ip address 1.0.0.17 255.255.255.252
+ ip ospf 1 area 0
+ no shutdown
+ duplex full
+exit
+
+========================
+   TRUNK Y SUBINTERFACES
+========================
+interface e0/1
+ no shutdown
+ duplex full
+ exit
+
+interface e0/1.10
+ encapsulation dot1Q 10
+ ip address 10.0.7.1 255.255.255.192
+ ip ospf 1 area 4
+ ip ospf passive-interface
+ no shutdown
+ exit
+
+========================
+         DHCP
+========================
+ip dhcp excluded-address 10.0.7.1 10.0.7.10
+
+ip dhcp pool BARAHONA
+ network 10.0.7.0 255.255.255.192
+ default-router 10.0.7.1
+ dns-server 10.0.3.242
+ domain-name overclocknet.com.do
+ lease 1
+exit
+
+========================
+       RUTA DEFAULT
+========================
+ip route 0.0.0.0 0.0.0.0 1.0.0.18
+
+========================
+         OSPF
+========================
+router ospf 1
+ router-id 11.11.11.11
+exit
+
+========================
+        VPN IPSEC
+========================
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 2
+ lifetime 86400
+
+crypto isakmp key VPN-123 address 1.0.0.1
+
+crypto ipsec transform-set TS esp-aes esp-sha-hmac
+
+access-list 110 permit ip 10.0.7.0 0.0.0.63 10.0.0.0 0.0.255.255
+
+crypto map VPN-MAP 10 ipsec-isakmp
+ set peer 1.0.0.1
+ set transform-set TS
+ match address 110
+
+interface e0/0
+ crypto map VPN-MAP
+
+end
+copy running-config startup-config

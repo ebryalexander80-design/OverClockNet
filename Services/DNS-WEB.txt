@@ -1,0 +1,156 @@
+----------------------------------------------------------------------
+SERVIDOR DNS-WEB - OVERCLOCKNET
+IP: 10.0.3.242 | Gateway: 10.0.3.241
+----------------------------------------------------------------------
+
+========================
+   CONFIGURACIÓN DE RED
+========================
+ip addr add 10.0.3.242/28 dev ens3
+ip link set ens3 up
+ip route add default via 10.0.3.241
+
+! PRUEBA ANTES DE INSTALAR
+ping 10.0.3.241
+ping 8.8.8.8
+
+! SI NO DA PING, ELIMINA LA RUTA:
+ip route del default via 10.0.3.241
+
+========================
+   INSTALACIÓN BIND9
+========================
+apt install bind9 -y
+
+========================
+   CONFIGURAR BIND9
+========================
+nano /etc/bind/named.conf.options
+
+! CONTENIDO:
+options {
+    directory "/var/cache/bind";
+
+    recursion yes;
+    allow-recursion { any; };
+
+    listen-on { 10.0.3.242; 127.0.0.1; };
+
+    forwarders {
+        8.8.8.8;
+        8.8.4.4;
+    };
+
+    dnssec-validation no;
+    listen-on-v6 { none; };
+};
+
+========================
+   ZONAS DNS
+========================
+nano /etc/bind/named.conf.local
+
+! CONTENIDO:
+zone "overclocknet.com.do" {
+    type master;
+    file "/etc/bind/zones/db.overclocknet.com.do";
+};
+
+zone "3.0.10.in-addr.arpa" {
+    type master;
+    file "/etc/bind/zones/db.10.0.3";
+};
+
+========================
+   ZONA DIRECTA
+========================
+nano /etc/bind/zones/db.overclocknet.com.do
+
+! CONTENIDO:
+$TTL 86400
+@   IN  SOA ns1.overclocknet.com.do. admin.overclocknet.com.do. (
+        2026041802 ; Serial
+        3600       ; Refresh
+        1800       ; Retry
+        604800     ; Expire
+        86400 )    ; Minimum TTL
+
+; Nameserver
+@       IN  NS      ns1.overclocknet.com.do.
+
+; A RECORDS
+ns1     IN  A       10.0.3.242
+www     IN  A       1.0.0.14
+dns     IN  A       10.0.3.242
+ftp     IN  A       10.0.3.243
+mail    IN  A       10.0.3.243
+
+; MX RECORD
+@       IN  MX 10   mail.overclocknet.com.do.
+
+; ACCESO ENTRE SUCURSALES
+santiago   IN A 10.0.3.242
+romana     IN A 10.0.2.130
+sd         IN A 10.0.1.130
+
+========================
+   ZONA INVERSA
+========================
+nano /etc/bind/zones/db.10.0.3
+
+! CONTENIDO:
+$TTL 604800
+@   IN  SOA ns1.overclocknet.com.do. admin.overclocknet.com.do. (
+        2026041801
+        604800
+        86400
+        2419200
+        604800 )
+
+@       IN  NS  ns1.overclocknet.com.do.
+
+242     IN PTR ns1.overclocknet.com.do.
+228     IN PTR ftp.overclocknet.com.do.
+229     IN PTR mail.overclocknet.com.do.
+
+========================
+   VALIDACIÓN
+========================
+named-checkconf
+named-checkzone overclocknet.com.do /etc/bind/zones/db.overclocknet.com.do
+named-checkzone 3.0.10.in-addr.arpa /etc/bind/zones/db.10.0.3
+
+========================
+   REINICIAR Y VERIFICAR
+========================
+systemctl restart bind9
+systemctl status bind9
+! Resultado esperado: active (running)
+
+========================
+   CONFIGURAR APACHE (WEB)
+========================
+echo "OVERCLOCKNET - SERVIDOR CENTRAL OK" > /var/www/html/index.html
+systemctl restart apache2
+
+========================
+   INTERFACES PERMANENTES
+========================
+nano /etc/network/interfaces
+
+! CONTENIDO:
+auto ens3
+iface ens3 inet static
+ address 10.0.3.242
+ netmask 255.255.255.240
+ gateway 10.0.3.241
+ dns-nameservers 10.0.3.242
+
+========================
+   PRUEBAS DNS
+========================
+nslookup mail.overclocknet.com.do
+! Resultado: Address: 10.0.3.244
+
+nslookup ftp.overclocknet.com.do
+! Resultado: Address: 10.0.3.243

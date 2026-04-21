@@ -1,0 +1,178 @@
+----------------------------------------------------------------
+R-ROMANA - SUCURSAL ROMANA
+----------------------------------------------------------------
+
+enable
+configure terminal
+
+hostname R-ROMANA
+no ip domain-lookup
+ip domain-name overclocknet.com.do
+enable secret cisco123
+service password-encryption
+banner motd # ACCESO RESTRINGIDO - OVERCLOCKNET #
+
+username admin privilege 15 secret NatanaelM2026
+crypto key generate rsa modulus 2048
+ip ssh version 2
+
+line console 0
+ login local
+ exec-timeout 5 0
+ logging synchronous
+exit
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+exit
+
+========================
+       AAA / RADIUS
+========================
+aaa new-model
+
+radius server RADIUS-SERVER
+ address ipv4 10.0.3.243 auth-port 1812 acct-port 1813
+ key radius123
+
+aaa group server radius RAD-GROUP
+ server name RADIUS-SERVER
+
+aaa authentication login default group RAD-GROUP local
+
+line vty 0 4
+ login authentication default
+ exit
+
+========================
+     IPSEC - FASE 1
+========================
+crypto isakmp policy 10
+ encryption aes
+ hash sha
+ authentication pre-share
+ group 2
+ lifetime 86400
+
+crypto isakmp key VPN-123 address 1.0.0.1
+
+========================
+     IPSEC - FASE 2
+========================
+crypto ipsec transform-set TS esp-aes esp-sha-hmac
+
+========================
+       WAN HACIA ISP
+========================
+interface ethernet 0/0
+ description WAN-ISP
+ ip address 1.0.0.9 255.255.255.252
+ duplex full
+ no shutdown
+exit
+
+========================
+   TRUNK Y SUBINTERFACES
+========================
+interface ethernet 0/1
+ description TRUNK-SW7
+ no shutdown
+exit
+
+interface ethernet 0/1.10
+ description VLAN10-Ventas
+ encapsulation dot1Q 10
+ ip address 10.0.3.129 255.255.255.192
+ no shutdown
+exit
+
+interface ethernet 0/1.20
+ description VLAN20-Administracion
+ encapsulation dot1Q 20
+ ip address 10.0.2.129 255.255.255.192
+ no shutdown
+exit
+
+interface ethernet 0/1.30
+ description VLAN30-Soporte
+ encapsulation dot1Q 30
+ ip address 10.0.4.1 255.255.255.240
+ no shutdown
+exit
+
+interface ethernet 0/1.99
+ description VLAN99-MGMT
+ encapsulation dot1Q 99
+ ip address 10.0.4.17 255.255.255.240
+ no shutdown
+exit
+
+========================
+          DHCP
+========================
+ip dhcp excluded-address 10.0.3.129 10.0.3.139
+ip dhcp excluded-address 10.0.2.129 10.0.2.139
+ip dhcp excluded-address 10.0.4.1 10.0.4.10
+
+ip dhcp pool VLAN10-Depto1
+ network 10.0.3.128 255.255.255.192
+ default-router 10.0.3.129
+ dns-server 10.0.3.242
+ domain-name overclocknet.com.do
+ lease 1
+exit
+
+ip dhcp pool VLAN20-Depto2
+ network 10.0.2.128 255.255.255.192
+ default-router 10.0.2.129
+ dns-server 10.0.3.242
+ domain-name overclocknet.com.do
+ lease 1
+exit
+
+ip dhcp pool VLAN30-Depto3
+ network 10.0.4.0 255.255.255.240
+ default-router 10.0.4.1
+ dns-server 10.0.3.242
+ domain-name overclocknet.com.do
+ lease 1
+exit
+
+========================
+       RUTA DEFAULT
+========================
+ip route 0.0.0.0 0.0.0.0 1.0.0.10
+
+========================
+       OSPF AREA 3
+========================
+router ospf 1
+ router-id 6.6.6.6
+ passive-interface Ethernet0/1.10
+ passive-interface Ethernet0/1.20
+ passive-interface Ethernet0/1.30
+ passive-interface Ethernet0/1.99
+ network 1.0.0.8 0.0.0.3 area 0
+ network 10.0.2.128 0.0.0.63 area 3
+ network 10.0.3.128 0.0.0.63 area 3
+ network 10.0.4.0 0.0.0.15 area 3
+ network 10.0.4.16 0.0.0.15 area 3
+exit
+
+========================
+        VPN IPSEC
+========================
+access-list 110 permit ip 10.0.2.128 0.0.0.63 10.0.0.0 0.0.255.255
+
+crypto map VPN-MAP 10 ipsec-isakmp
+ set peer 1.0.0.1
+ set transform-set TS
+ match address 110
+
+interface e0/0
+ crypto map VPN-MAP
+
+end
+write memory

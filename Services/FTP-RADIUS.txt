@@ -1,0 +1,175 @@
+----------------------------------------------------------------------
+SERVIDOR FTP + RADIUS - OVERCLOCKNET
+IP: 10.0.3.243 | Gateway: 10.0.3.241
+----------------------------------------------------------------------
+
+========================
+   CONFIGURACIÓN DE RED
+========================
+ip addr add 10.0.3.243/28 dev ens3
+ip link set ens3 up
+ip route add default via 10.0.3.241
+
+! PRUEBA ANTES DE INSTALAR
+ping 10.0.3.241
+ping 8.8.8.8
+
+! SI NO DA PING, ELIMINA LA RUTA:
+ip route del default via 10.0.3.241
+
+================================================================
+                     CONFIGURACIÓN FTP
+================================================================
+
+========================
+   INSTALACIÓN VSFTPD
+========================
+apt update
+apt install vsftpd -y
+
+========================
+   CONFIGURAR VSFTPD
+========================
+nano /etc/vsftpd.conf
+
+! CONTENIDO COMPLETO:
+listen=YES
+listen_ipv6=NO
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+chroot_local_user=YES
+xferlog_enable=YES
+pasv_enable=YES
+pasv_min_port=40000
+pasv_max_port=40010
+allow_writeable_chroot=YES
+local_root=/home/$USER/ftp
+user_sub_token=$USER
+
+========================
+   CREAR USUARIOS FTP
+========================
+adduser kendry
+adduser adrian
+adduser laramie
+adduser samil
+adduser alexander
+adduser natanael
+adduser yasmel
+adduser millie
+
+! CONTRASEÑAS:
+! kendry      → Director123
+! adrian      → Seguridad123
+! laramie     → Operador123
+! samil       → Senior123
+! alexander   → Junior123
+! natanael    → Analista123
+! yasmel      → Monitoreo123
+! millie      → Soporte123
+
+========================
+   PERMISOS DE USUARIOS
+========================
+chmod 755 /home/kendry
+chmod 755 /home/adrian
+chmod 755 /home/laramie
+chmod 755 /home/samil
+chmod 755 /home/alexander
+chmod 755 /home/natanael
+chmod 755 /home/yasmel
+chmod 755 /home/millie
+
+========================
+   REINICIAR Y VERIFICAR
+========================
+systemctl restart vsftpd
+systemctl enable vsftpd
+systemctl status vsftpd
+! Resultado esperado: active (running)
+
+========================
+   PRUEBAS FTP
+========================
+! Desde el mismo servidor:
+ftp localhost
+
+! Desde otro equipo:
+ftp 10.0.3.243
+
+! Login de ejemplo:
+! Name: alexander
+! Password: Junior123
+
+! Comandos dentro de FTP:
+ls
+put archivo.txt
+get archivo.txt
+
+! Prueba con DNS:
+ftp ftp.overclocknet.com.do
+! Debe resolver a: 10.0.3.243
+
+================================================================
+                   CONFIGURACIÓN RADIUS
+================================================================
+
+========================
+   INSTALACIÓN FREERADIUS
+========================
+apt update
+apt install freeradius freeradius-utils -y
+
+========================
+   VERIFICAR SERVICIO
+========================
+systemctl status freeradius
+! Debe salir: active (running)
+
+! SI ESTÁ INACTIVO:
+systemctl start freeradius
+systemctl enable freeradius
+
+========================
+   CONFIGURAR CLIENTE NAS
+========================
+nano /etc/freeradius/3.0/clients.conf
+
+! AGREGAR AL FINAL:
+client red-interna {
+    ipaddr = 10.0.3.240/28
+    secret = clave123
+}
+
+========================
+   CREAR USUARIOS RADIUS
+========================
+nano /etc/freeradius/3.0/mods-config/files/authorize
+
+! AGREGAR (respetar alineación):
+kendry      Cleartext-Password := "Director123"
+adrian      Cleartext-Password := "Seguridad123"
+laramie     Cleartext-Password := "Operador123"
+samil       Cleartext-Password := "Senior123"
+alexander   Cleartext-Password := "Junior123"
+natanael    Cleartext-Password := "Analista123"
+yasmel      Cleartext-Password := "Monitoreo123"
+millie      Cleartext-Password := "Soporte123"
+
+========================
+   REINICIAR FREERADIUS
+========================
+systemctl restart freeradius
+
+========================
+   PRUEBA RADIUS
+========================
+radtest alexander Junior123 127.0.0.1 0 clave123
+! Resultado esperado: Access-Accept
+
+========================
+   PUERTOS UTILIZADOS
+========================
+! UDP 1812 → Autenticación
+! UDP 1813 → Accounting

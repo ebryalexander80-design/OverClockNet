@@ -1,0 +1,112 @@
+----------------------------------------------------------------
+ISP - CONFIGURACIÓN
+----------------------------------------------------------------
+
+enable
+configure terminal
+hostname ISP
+no ip domain-lookup
+enable secret cisco123
+service password-encryption
+banner motd # ISP - ACCESO RESTRINGIDO #
+
+========================
+          SSH
+========================
+username admin privilege 15 secret Isp-access2026
+crypto key generate rsa modulus 2048
+ip ssh version 2
+
+line console 0
+ login local
+ exec-timeout 5 0
+ logging synchronous
+exit
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+exit
+
+========================
+       INTERFACES
+========================
+interface ethernet 0/0
+ description ENLACE-R-CORE
+ ip address 1.0.0.2 255.255.255.252
+ duplex full
+ no shutdown
+exit
+
+interface ethernet 0/1
+ description ENLACE-SANTIAGO
+ ip address 1.0.0.6 255.255.255.252
+ duplex full
+ no shutdown
+exit
+
+interface ethernet 2/0
+ description ENLACE-ROMANA
+ ip address 1.0.0.10 255.255.255.252
+ no shutdown
+ duplex full
+exit
+
+interface e0/2
+ description LINK-PUERTO-PLATA
+ ip address 1.0.0.14 255.255.255.252
+ no shutdown
+ duplex full
+exit
+
+interface e0/3
+ description LINK-BARAHONA
+ ip address 1.0.0.18 255.255.255.252
+ no shutdown
+ duplex full
+exit
+
+interface ethernet 1/0
+ description SALIDA-INTERNET
+ ip address dhcp
+ no shutdown
+exit
+
+========================
+    RUTAS ESTÁTICAS
+========================
+! Ruta default hacia internet
+ip route 0.0.0.0 0.0.0.0 e1/0
+
+! Hacia Core (Santo Domingo)
+ip route 10.0.0.0 255.255.0.0 1.0.0.1
+
+! Hacia Santiago
+ip route 10.0.3.192 255.255.255.224 1.0.0.5
+
+! Hacia Romana
+ip route 10.0.2.128 255.255.255.192 1.0.0.9
+ip route 10.0.3.128 255.255.255.192 1.0.0.9
+ip route 10.0.4.0 255.255.255.240 1.0.0.9
+
+! Hacia Puerto Plata
+ip route 10.0.6.0 255.255.255.192 1.0.0.13
+
+! Hacia Barahona
+ip route 10.0.7.0 255.255.255.192 1.0.0.17
+
+========================
+    OSPF (BACKBONE)
+========================
+router ospf 1
+ router-id 9.9.9.9
+ network 1.0.0.0 0.0.0.3 area 0
+ network 1.0.0.4 0.0.0.3 area 0
+ network 1.0.0.8 0.0.0.3 area 0
+ network 1.0.0.12 0.0.0.3 area 0
+ default-information originate
+exit
+
+end
+copy running-config startup-config

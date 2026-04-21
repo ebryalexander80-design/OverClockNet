@@ -1,0 +1,98 @@
+----------------------------------------
+SW7 - SWITCH ACCESO - ROMANA
+----------------------------------------
+
+enable
+configure terminal
+
+hostname SW7
+no ip domain-lookup
+spanning-tree mode rapid-pvst
+
+========================
+          VLANs
+========================
+vlan 10
+ name DEPTO1-ADMIN
+exit
+vlan 20
+ name DEPTO2-VENTAS
+exit
+vlan 30
+ name DEPTO3-RRHH
+exit
+vlan 99
+ name MGMT
+exit
+vlan 999
+ name NATIVE
+exit
+
+========================
+   TRUNK HACIA R-ROMANA
+========================
+interface ethernet 0/0
+ description TRUNK-R-ROMANA
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 10,20,30,99,999
+ no shutdown
+exit
+
+========================
+   ETHERCHANNEL HACIA SW8
+========================
+interface range ethernet 0/1 - 3
+ description ETHERCHANNEL-SW8
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 10,20,30,99,999
+ channel-group 1 mode active
+ no shutdown
+exit
+
+interface port-channel 1
+ description ETHERCHANNEL-SW8
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 999
+ switchport trunk allowed vlan 10,20,30,99,999
+exit
+
+========================
+   PUERTOS ACCESO
+========================
+interface ethernet 1/0
+ description PC-VLAN10
+ switchport mode access
+ switchport access vlan 10
+ switchport nonegotiate
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+exit
+
+interface ethernet 1/1
+ description PC-VLAN20
+ switchport mode access
+ switchport access vlan 20
+ switchport nonegotiate
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+exit
+
+========================
+       SVI MGMT
+========================
+interface vlan 99
+ ip address 10.0.4.18 255.255.255.240
+ no shutdown
+exit
+
+ip default-gateway 10.0.4.17
+
+end
+write memory
