@@ -1,6 +1,3 @@
-
-# 📁 Estructura del Repositorio
-
 ```bash
 OverClockNet-network-infra/
 │
@@ -10,9 +7,6 @@ OverClockNet-network-infra/
 │   ├── Barahona/
 │   │   ├── R-Barahona.txt
 │   │   └── SW-Barahona.txt
-|   |   
-|   ├── docs/
-│   ├── OverClockNet.pdf
 │   │
 │   ├── ISP/
 │   │   └── ISP.txt
@@ -38,6 +32,9 @@ OverClockNet-network-infra/
 │       ├── SW-3.txt
 │       ├── SW-4.txt
 │       └── SW-5.txt
+│
+├── docs/
+│   └── OverClockNet.pdf
 │
 ├── Security/
 │   ├── ACL/
