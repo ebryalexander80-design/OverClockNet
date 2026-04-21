@@ -2,18 +2,14 @@
 
 Proyecto empresarial de infraestructura de red que integra servicios DNS, Web, FTP, Email y RADIUS en un entorno virtualizado. Incluye VLANs, direccionamiento IP, enrutamiento y autenticación centralizada para simular un entorno corporativo funcional.
 
-xtimacredit-network-infra/
+# 📁 Estructura del Repositorio
+
+```bash
+OverClockNet-network-infra/
 │
 ├── README.md
 │
-├── docs/
-│   ├── PROYECTO_FINAL.pdf
-│   ├── direccionamiento-ip.md
-│   ├── equipos.md
-│   └── organigrama.md
-│
 ├── configs/
-│   │
 │   ├── Barahona/
 │   │   ├── R-Barahona.txt
 │   │   └── SW-Barahona.txt
@@ -44,23 +40,12 @@ xtimacredit-network-infra/
 │       └── SW-5.txt
 │
 ├── Security/
-│   │
 │   ├── ACL/
-│   │   ├── R-Barahona.txt
-│   │   ├── R-PuertoPlata.txt
-│   │   ├── R-Romana.txt
-│   │   ├── R-Santiago.txt
-│   │   └── R-SantoDomingo.txt
-│   │
 │   └── VPN/
-│       ├── R-Barahona.txt
-│       ├── R-PuertoPlata.txt
-│       ├── R-Romana.txt
-│       ├── R-Santiago.txt
-│       └── R-SantoDomingo.txt
 │
 └── Services/
     ├── DNS-WEB.txt
     ├── E-MAIL.txt
     ├── FTP-RADIUS.txt
     └── README.md
+```
