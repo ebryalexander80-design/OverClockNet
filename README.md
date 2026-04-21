@@ -6,6 +6,9 @@ OverClockNet-network-infra/
 │
 ├── README.md
 │
+├── docs/
+│   ├── OverClockNet.pdf
+│
 ├── configs/
 │   ├── Barahona/
 │   │   ├── R-Barahona.txt
