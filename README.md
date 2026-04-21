@@ -5,7 +5,8 @@ OverClockNet-network-infra/
 │
 ├── README.md
 │
-├── configs/
+├── Configs/
+│   │
 │   ├── Barahona/
 │   │   ├── R-Barahona.txt
 │   │   └── SW-Barahona.txt
@@ -14,7 +15,7 @@ OverClockNet-network-infra/
 │   │   └── ISP.txt
 │   │
 │   ├── Puerto-Plata/
-│   │   ├── R-PuertoPlata.txt
+│   │   ├── R-Puerto Plata.txt
 │   │   └── S-PP.txt
 │   │
 │   ├── Romana/
@@ -24,27 +25,38 @@ OverClockNet-network-infra/
 │   │
 │   ├── Santiago/
 │   │   ├── R-Santiago.txt
-│   │   ├── SW-6.txt
+│   │   ├── SW-9.txt
 │   │   └── Sw-Santiago.txt
 │   │
 │   └── Santo-Domingo/
 │       ├── R-SW1.txt
 │       ├── R-SW2.txt
-│       ├── R-SantoDomingo.txt
+│       ├── R-Santo Domingo.txt
 │       ├── SW-3.txt
 │       ├── SW-4.txt
 │       └── SW-5.txt
 │
-├── docs/
-│   └── OverClockNet.pdf
+├── Docs/
+│   └── OVERCLOCKNET.pdf
 │
 ├── Security/
+│   │
 │   ├── ACL/
+│   │   ├── R-Barahona.txt
+│   │   ├── R-Puerto Plata.txt
+│   │   ├── R-Romana.txt
+│   │   ├── R-Santiago.txt
+│   │   └── R-Santo Domingo.txt
+│   │
 │   └── VPN/
+│       ├── R-Barahona.txt
+│       ├── R-Puerto Plata.txt
+│       ├── R-Romana.txt
+│       ├── R-Santiago.txt
+│       └── R-Santo Domingo.txt
 │
 └── Services/
     ├── DNS-WEB.txt
     ├── E-MAIL.txt
     ├── FTP-RADIUS.txt
     └── README.md
-```
