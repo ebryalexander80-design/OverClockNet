@@ -1,0 +1,192 @@
+----------------------------------------------------------------------
+SERVIDOR MAIL - OVERCLOCKNET
+IP: 10.0.3.244 | Gateway: 10.0.3.241
+----------------------------------------------------------------------
+
+========================
+   CONFIGURACIÓN DE RED
+========================
+ip addr add 10.0.3.244/28 dev ens3
+ip link set ens3 up
+ip route add default via 10.0.3.241
+
+! PRUEBA ANTES DE INSTALAR
+ping 10.0.3.241
+ping 8.8.8.8
+
+! SI NO DA PING, ELIMINA LA RUTA:
+ip route del default via 10.0.3.241
+
+========================
+   CONFIGURACIÓN DEL HOST
+========================
+hostnamectl set-hostname mail.overclocknet.com.do
+
+nano /etc/hosts
+
+! CONTENIDO:
+127.0.0.1       localhost
+127.0.1.1       mail.overclocknet.com.do mail
+10.0.3.244      mail.overclocknet.com.do mail
+
+========================
+   INSTALACIÓN SERVICIOS
+========================
+apt-get update
+apt install postfix dovecot-imapd dovecot-pop3d -y
+
+! DURANTE INSTALACIÓN:
+Tipo: Internet Site
+Nombre: overclocknet.com.do
+
+========================
+   CONFIGURACIÓN POSTFIX
+========================
+nano /etc/postfix/main.cf
+
+! EDITAR:
+myhostname = mail.overclocknet.com.do
+myorigin = $mydomain
+mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
+mynetworks = 127.0.0.0/8, 10.0.3.240/28
+inet_interfaces = all
+inet_protocols = ipv4
+
+! AGREGAR AL FINAL:
+home_mailbox = Maildir/
+mydomain = overclocknet.com.do
+
+========================
+   INTEGRACIÓN CON DOVECOT
+========================
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+
+smtpd_recipient_restrictions =
+    permit_sasl_authenticated,
+    permit_mynetworks,
+    reject_unauth_destination
+
+smtpd_sasl_security_options = noanonymous
+broken_sasl_auth_clients = yes
+
+========================
+   CONFIGURAR MAILDIR
+========================
+maildirmake.dovecot /etc/skel/Maildir
+
+========================
+   CREACIÓN DE USUARIOS
+========================
+adduser kendry
+adduser adrian
+adduser laramie
+adduser samil
+adduser alexander
+adduser natanael
+adduser yasmel
+adduser millie
+
+! CREDENCIALES:
+kendry     / Director123
+adrian     / Seguridad123
+laramie    / Operador123
+samil      / Senior123
+alexander  / Junior123
+natanael   / Analista123
+yasmel     / Monitora123
+millie     / Soporte123
+
+========================
+   REINICIAR SERVICIOS
+========================
+systemctl restart postfix
+systemctl restart dovecot
+
+systemctl enable postfix
+systemctl enable dovecot
+
+========================
+   VERIFICACIÓN SERVICIOS
+========================
+systemctl status postfix
+systemctl status dovecot
+
+! Resultado esperado:
+active (running)
+
+========================
+   VERIFICAR PUERTOS
+========================
+ss -tulnp | grep 25
+! SMTP → LISTEN
+
+ss -tulnp | grep 143
+! IMAP → LISTEN
+
+========================
+   CONFIGURACIÓN DOVECOT
+========================
+nano /etc/dovecot/dovecot.conf
+
+! AGREGAR:
+protocols = imap pop3
+
+nano /etc/dovecot/conf.d/10-master.conf
+
+! EDITAR:
+service auth {
+
+unix_listener auth-userdb {
+    mode = 0666
+    user = postfix
+    group = postfix
+}
+
+========================
+   CREAR DIRECTORIOS
+========================
+mkdir -p /var/spool/postfix/private
+chown postfix:postfix /var/spool/postfix/private
+chmod 755 /var/spool/postfix/private
+
+========================
+   REINICIO FINAL
+========================
+systemctl restart dovecot
+systemctl restart postfix
+
+systemctl status dovecot
+! Debe decir: active (running)
+
+========================
+   PRUEBAS IMAP
+========================
+telnet localhost 143
+
+a login alexander Junior123
+! Resultado: OK Logged in
+
+a logout
+
+========================
+   PRUEBAS SMTP
+========================
+telnet localhost 25
+
+! Respuesta esperada:
+220 mail.overclocknet.com.do ESMTP Postfix
+
+========================
+   ENVÍO DE CORREO MANUAL
+========================
+HELO localhost
+MAIL FROM:<alexander@overclocknet.com.do>
+RCPT TO:<samil@overclocknet.com.do>
+DATA
+Subject: Prueba
+
+Hola, esto es una prueba.
+.
+QUIT
