@@ -1,0 +1,19 @@
+ACL-1 R-CORE PROTEGER FINANZA:(R-SW1)
+
+configure terminal
+
+ip access-list extended PROTEGER-FINANZAS
+ remark Solo Santiago accede a Finanzas
+ permit ip 10.0.3.192 0.0.0.31 10.0.0.0 0.0.0.255
+ deny ip 10.0.2.128 0.0.0.63 10.0.0.0 0.0.0.255
+ deny ip 10.0.3.128 0.0.0.63 10.0.0.0 0.0.0.255
+ deny ip 10.0.4.0 0.0.0.15 10.0.0.0 0.0.0.255
+ deny ip 10.0.6.0 0.0.0.63 10.0.0.0 0.0.0.255
+ deny ip 10.0.7.0 0.0.0.63 10.0.0.0 0.0.0.255
+ permit ip any any
+
+interface vlan 10
+ ip access-group PROTEGER-FINANZAS in
+
+end
+write memory
