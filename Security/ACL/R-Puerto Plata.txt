@@ -1,1 +1,13 @@
-access-list 110 permit ip 10.0.6.0 0.0.0.63 10.0.0.0 0.0.255.255
+ACL-R-PUERTO-PLATA
+configure terminal
+
+ip access-list extended BLOQUEAR-INTERNET
+ remark Puerto Plata no sale a internet
+ deny ip 10.0.6.0 0.0.0.63 any
+ permit ip any any
+
+interface e0/1.10
+ ip access-group BLOQUEAR-INTERNET in
+
+end
+write memory
