@@ -17,8 +17,6 @@ interface e0/1.30
  ip access-group BLOQUEAR-ROMANA-RRHH in
  exit
 
-
-
 ACL 3 — BLOQUEAR INTERNET SUCURSALES (R-ROMANA)
 
 configure terminal
