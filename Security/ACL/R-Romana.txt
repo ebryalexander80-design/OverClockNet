@@ -15,6 +15,30 @@ interface e0/1.20
 
 interface e0/1.30
  ip access-group BLOQUEAR-ROMANA-RRHH in
+ exit
+
+
+
+ACL 3 — BLOQUEAR INTERNET SUCURSALES (R-ROMANA)
+
+configure terminal
+
+ip access-list extended BLOQUEAR-INTERNET
+ remark Romana no sale a internet
+ deny ip 10.0.3.128 0.0.0.63 any
+ deny ip 10.0.2.128 0.0.0.63 any
+ deny ip 10.0.4.0 0.0.0.15 any
+ permit ip any any
+
+interface e0/1.10
+ ip access-group BLOQUEAR-INTERNET in
+
+interface e0/1.20
+ ip access-group BLOQUEAR-INTERNET in
+
+interface e0/1.30
+ ip access-group BLOQUEAR-INTERNET in
 
 end
+write memory
 write memory
