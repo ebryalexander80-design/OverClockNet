@@ -1,0 +1,29 @@
+----------------------------------------------------------   
+     CONFIGURACIÓN DE LA NAT:
+----------------------------------------------------------
+
+R-CORE-SANTO DOMINGO - NAT Principal
+configure terminal
+
+ip access-list standard NAT-INTERNO
+ permit 10.0.0.0 0.0.255.255
+ permit 10.0.3.0 0.0.0.255
+ permit 10.0.4.0 0.0.0.255
+ permit 10.0.5.0 0.0.0.255
+ permit 10.0.6.0 0.0.0.255
+ permit 10.0.7.0 0.0.0.255
+ permit 10.0.99.0 0.0.0.255
+
+ip nat inside source list NAT-INTERNO interface ethernet 2/0 overload
+
+interface ethernet 2/0
+ ip nat outside
+
+interface ethernet 0/0
+ ip nat inside
+
+interface ethernet 0/1
+ ip nat inside
+
+end
+write memory

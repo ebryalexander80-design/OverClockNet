@@ -1,0 +1,20 @@
+-------------------------------------------------
+       R-SANTIAGO — NAT Local
+-------------------------------------------------
+configure terminal
+
+ip access-list standard NAT-SANTIAGO
+ deny 10.0.3.240 0.0.0.15
+ permit 10.0.3.192 0.0.0.31
+ permit 10.0.3.224 0.0.0.15
+
+ip nat inside source list NAT-SANTIAGO interface e0/0 overload
+
+interface e0/0
+ ip nat outside
+
+interface e0/1
+ ip nat inside
+
+end
+write memory
