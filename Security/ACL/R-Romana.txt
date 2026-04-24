@@ -1,1 +1,20 @@
-access-list 110 permit ip 10.0.2.128 0.0.0.63 10.0.0.0 0.0.255.255
+ACL 2 — BLOQUEAR ROMANA → RRHH (R-ROMANA):
+
+configure terminal
+
+ip access-list extended BLOQUEAR-ROMANA-RRHH
+ remark Romana no accede a RRHH
+ deny ip any 10.0.1.128 0.0.0.127
+ permit ip any any
+
+interface e0/1.10
+ ip access-group BLOQUEAR-ROMANA-RRHH in
+
+interface e0/1.20
+ ip access-group BLOQUEAR-ROMANA-RRHH in
+
+interface e0/1.30
+ ip access-group BLOQUEAR-ROMANA-RRHH in
+
+end
+write memory
